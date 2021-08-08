@@ -1,11 +1,11 @@
 #include "credentials.h"
-
-// -------------------------------------------------------------------------------------------
-
 // WiFi-Setup
 #include <WiFi.h>
 #include <HTTPClient.h>
-IPAddress ip; 
+#include "ESPBoard.h"
+
+ESPBoard ESP_board;
+
 
 //#include <Wire.h>
 
@@ -89,7 +89,6 @@ unsigned int temperature_count = 0;
 String post_data = "";
 
 
-void setup_wifi_connection(); // Will be defined later
 
 void setup()
 {
@@ -97,7 +96,7 @@ void setup()
   Serial.println();
   Serial.println("setup");
 
-  setup_wifi_connection();
+  ESP_board.setup_wifi_connection();
   Serial.println("WiFi setup done");
 
 
@@ -206,7 +205,7 @@ void loop()
   
       post_data = "";
       post_data += "room=";
-      post_data += room_name;
+      post_data += ROOM_SENSOR_ROOM_NAME;
       post_data += "&bme680_temperature=";
       post_data += bme680_temperature;
       post_data += "&bme680_humidity=";
@@ -233,7 +232,7 @@ void loop()
       post_data += tsl2591_lux;
       //post_data += "&gyml8511_uv=";
       //post_data += gyml8511_uv;
-      send_post_data_to_server(server_post_url, post_data);
+      ESP_board.send_post_data_to_server(ROOM_SENSOR_SERVER_POST_URL, post_data);
 
 
       
@@ -258,10 +257,10 @@ void loop()
     delay(1000);
     String post_data_alarm = "";
     post_data_alarm += "username=";
-    post_data_alarm += "jona-esp";
+    post_data_alarm += ROOM_SENSOR_SERVER_ALARM_USERNAME;
     post_data_alarm += "&password=";
-    post_data_alarm += password_alarm;
-    String http_response_alarm = send_post_data_to_server(server_post_url_alarm, post_data_alarm);
+    post_data_alarm += ROOM_SENSOR_SERVER_ALARM_PASSWORD;
+    String http_response_alarm = ESP_board.send_post_data_to_server(ROOM_SENSOR_SERVER_ALARM_URL, post_data_alarm);
     
     int alarm_code = http_response_alarm.toInt();
     
@@ -277,36 +276,23 @@ void loop()
     // - Coffee without light: 3
     // - Light without coffee: 2
     // - No coffee, no light, only basic alarm: 1 (not implemented)
+
+    // COFFEE IS NOT DONE FROM THIS ESP ANYMORE!
     
     if(alarm_code > 0){
       Serial.println(F("Activate alarm"));
       
-      if(alarm_code > 3){ // COFFEE
-        time_coffee_start = millis() + delay_coffee_after_light_on; // Set timer for 1st coffee
-        time_second_coffee_start = time_coffee_start + time_between_coffees; // Set timer for 2nd coffee
-        alarm_code -= 2;
-      }
       if(alarm_code > 1){ // LIGHT
         delay(1000);
-        get_request(GET_PLUG_1_Off_URL);
-        get_request(GET_PLUG_1_On_URL);
-        get_request(GET_PLUG_2_Off_URL);
-        get_request(GET_PLUG_2_On_URL);
+        ESP_board.get_request(GET_PLUG_1_Off_URL);
+        ESP_board.get_request(GET_PLUG_1_On_URL);
+        ESP_board.get_request(GET_PLUG_2_Off_URL);
+        ESP_board.get_request(GET_PLUG_2_On_URL);
         delay(1000);
         alarm_code -= 1;
       }
       // Do any basic alarm feature (not implemented)
     }
-  }
-  if(time_coffee_start != 0 && millis() > time_coffee_start){
-    Serial.println("Make coffee!");
-    get_request(START_COFFEE_MACHINE_URL);
-    time_coffee_start = 0;
-  }
-  if(time_second_coffee_start != 0 && millis() > time_second_coffee_start){
-    Serial.println("Make 2nd coffee!");
-    get_request(START_COFFEE_MACHINE_URL);
-    time_second_coffee_start = 0;
   }
 }
 
@@ -390,69 +376,3 @@ void get_data_from_TSL2591(){
 float mapfloat(float x, float in_min, float in_max, float out_min, float out_max){
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }*/
-
-// -------------------------------------------------------------------------------------------
-
-void setup_wifi_connection(){
-  WiFi.mode(WIFI_STA);
-  WiFi.disconnect();
-  WiFi.begin(ssid, password); 
-
-  Serial.print(F("Connecting to wifi"));
-  
-  unsigned long time_start_connecting = millis();
-  
-  while (WiFi.status() != WL_CONNECTED) {
-
-    
-    delay(500);
-    Serial.print(".");
-
-    // If ESP wasn't able to connect to WiFi within 6 seconds, abort the try and start a new try
-    if(millis() - time_start_connecting > 6000){
-      //checkIfEverythingIsOkayOrRestartESP(true);
-      Serial.println("");
-      Serial.print(F("Unable to connect to network. Starting a new try."));
-      time_start_connecting = millis();
-      WiFi.disconnect();
-      WiFi.begin(ssid, password); 
-    }
-  }
-  Serial.println("");
-  Serial.printf("Connected with %s.\n", ssid);
-  ip = WiFi.localIP();
-  Serial.printf("IP address: %s.\n", ip.toString().c_str());
-}
-
-
-
-String send_post_data_to_server(String& server_post_url, String& post_data){
-  HTTPClient http;   
-  http.begin(server_post_url);
-  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-  int http_response_code = http.POST(post_data);
-
-  String return_string = "";
-  
-  if(http_response_code > 0){
-    String response = http.getString();
-    //Serial.println("HTTP Response Code: " + String(http_response_code) + ", ");
-    //Serial.println(response);
-    return_string = response;
-  }
-  else {
-    Serial.println("Error: HTTP Response Code " + String(http_response_code));
-    return_string = String(http_response_code);
-  }
-  http.end();
-  return return_string;
-}
-
-
-
-void get_request(String server_get_url){
-  HTTPClient http;   
-  http.begin(server_get_url);
-  int http_response_code = http.GET();
-  http.end();
-}
