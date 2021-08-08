@@ -1,0 +1,8 @@
+SERVER_ALARM_CHECK_AND_GET_DATA_URL = "https://example.com"
+SERVER_SCHEDULE_COFFEE_URL = "https://example.com"
+LOCAL_PLUG_1_IP = "192.168.0.1"
+LOCAL_PLUG_2_IP = "192.168.0.2"
+LOCAL_TURN_PLUG_1_OFF_URL = "http://" + LOCAL_PLUG_1_IP + "/cm?user=xxx&password=***&cmnd=Power%20Off"
+LOCAL_TURN_PLUG_1_ON_URL = "http://" + LOCAL_PLUG_1_IP + "/cm?user=xxx&password=***&cmnd=Power%20On"
+LOCAL_TURN_PLUG_2_OFF_URL = "http://" + LOCAL_PLUG_2_IP + "/cm?user=xxx&password=***&cmnd=Power%20Off"
+LOCAL_TURN_PLUG_2_ON_URL = "http://" + LOCAL_PLUG_2_IP + "/cm?user=xxx&password=***&cmnd=Power%20On"

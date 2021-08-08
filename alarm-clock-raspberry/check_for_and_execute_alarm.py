@@ -34,7 +34,7 @@ try:
                 response_plug2 = requests.get(LOCAL_TURN_PLUG_2_ON_URL)
             except:
                 print("Exception: Light 2 could not be turned on.") 
-        if(turn_lights_on == '1'):
+        if(make_coffee == '1'):
             print("Schedule making a coffee")
             new_time = datetime_alarm + timedelta(minutes = int(coffee_delay))
             new_time_str = new_time.strftime("%H:%M")
