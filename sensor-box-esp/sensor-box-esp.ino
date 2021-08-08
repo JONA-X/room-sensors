@@ -46,10 +46,6 @@ const float GYML8511_out_max = 15.0;
 const byte GYML8511_number_of_readings_for_avg = 30;
 */
 
-unsigned long delay_coffee_after_light_on = 60*1000; // Coffee should be made 60 seconds after lights turn on
-unsigned long time_coffee_start = 0;
-unsigned long time_between_coffees = 30*1000; // Time needed for one coffee. Only after that time another one can be made
-unsigned long time_second_coffee_start = 0;
 
 // -------------------------------------------------------------------------------------------
 
@@ -255,44 +251,6 @@ void loop()
     temperature_count += 1;
     
     delay(1000);
-    String post_data_alarm = "";
-    post_data_alarm += "username=";
-    post_data_alarm += ROOM_SENSOR_SERVER_ALARM_USERNAME;
-    post_data_alarm += "&password=";
-    post_data_alarm += ROOM_SENSOR_SERVER_ALARM_PASSWORD;
-    String http_response_alarm = ESP_board.send_post_data_to_server(ROOM_SENSOR_SERVER_ALARM_URL, post_data_alarm);
-    
-    int alarm_code = http_response_alarm.toInt();
-    
-    // Alarm code == 0 --> No alarm
-    // Alarm code > 3 --> Coffee. Subtract 2
-    // Alarm code > 1 --> Light. Subtract 1
-    // All options:
-    // 1 --> Alarm, but nothing triggered
-    // 2 --> Light
-    // 4 --> Coffee
-    // Examples:
-    // - Coffee and light: 4
-    // - Coffee without light: 3
-    // - Light without coffee: 2
-    // - No coffee, no light, only basic alarm: 1 (not implemented)
-
-    // COFFEE IS NOT DONE FROM THIS ESP ANYMORE!
-    
-    if(alarm_code > 0){
-      Serial.println(F("Activate alarm"));
-      
-      if(alarm_code > 1){ // LIGHT
-        delay(1000);
-        ESP_board.get_request(GET_PLUG_1_Off_URL);
-        ESP_board.get_request(GET_PLUG_1_On_URL);
-        ESP_board.get_request(GET_PLUG_2_Off_URL);
-        ESP_board.get_request(GET_PLUG_2_On_URL);
-        delay(1000);
-        alarm_code -= 1;
-      }
-      // Do any basic alarm feature (not implemented)
-    }
   }
 }
 

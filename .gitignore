@@ -1,2 +1,3 @@
 esp-general/credentials.h
 arduino-upload/*
+alarm-clock-raspberry/settings.py
